@@ -1,10 +1,12 @@
-<article>
+<article class="py-8">
   {% for block in section.blocks %}
     {% case block.type %}
       {% when 'article_title' %}
         <div class="flex justify-center items-center">
           <div class="max-w-7xl text-center">
-            <a class="text-base uppercase text-gray-500 hover:text-gray-900 font-bold" href="{{blog.url}}">{{ blog.title }}</a>
+            <a class="text-base uppercase text-gray-500 hover:text-gray-900 font-bold" href="{{blog.url}}">
+              {{- blog.title -}}
+            </a>
 
             <h1 class="text-4xl md:text-6xl font-medium">{{ article.title }}</h1>
           </div>
@@ -15,15 +17,12 @@
             {% if section.settings.show_author %}
               <small>{{ article.author }}</small>
             {% endif %}
-
           </div>
         </div>
 
       {% when 'article_date' %}
-
         <div class="flex justify-center item-center">
           <div class="max-w-7xl item-center">
-
             {% if section.settings.show_date %}
               <time datetime="{{article.published_at | date: '%Y-%m-%d'}}">
                 {{- article.published_at | date: format: 'on_date' -}}
@@ -32,62 +31,127 @@
           </div>
         </div>
       {% when 'article_image' %}
-        <img
-          src="{{article.image | img_url: 'large' }}"
-          alt="{{article.image.alt}}"
-          width="600"
-          height="400">
+        <div class="max-w-7xl bg-blue-100 rounded-lg mx-2 md:mx-auto overflow-hidden my-4">
+          {% if article.image != blank %}
+            <img
+              class="w-full h-80 md:h-96 object-cover object-center"
+              src="{{article.image | image_url: 'large' }}"
+              alt="{{article.image.alt}}"
+              width="{{ article.image.width }}"
+              height="{{ article.image.height }}">
+          {% else %}
+            {% assign placeholder_image = 'Lifestyle-1' %}
+            {{ placeholder_image | placeholder_svg_tag: 'w-full h-80 md:h-96 object-cover object-center p-5' }}
+          {% endif %}
+        </div>
 
       {% when 'article_content' %}
-        <div class="">{{ article.content }}</div>
+        <div class="flex items-center justify-center">
+          <div class="max-w-7xl">
+            {{ article.content }}
+          </div>
+        </div>
 
-        {% else %}
+    {% else %}
 
-    {% endcase %}
-  {% endfor %}
-</article>
+      {% endcase %}
+    {% endfor %}
+  </article>
+  {% if blog.comments_enabled? %}
+    <div id="comments" class="my-8">
+      {% if article.comments_count > 0 %}
+      {% else %}
+        <p>There are no comments yet.</p>
+      {% endif %}
+    </div>
+    <div id="comments_form" class="mb-8">
+      {% form 'new_comment'
+        , article %}
+        <div class="flex-1 mx-auto items-center justify-center max-w-4xl px-4">
+          <div class="px-1 md:flex mb-3">
+            <div class="px-3 md:w-1/2">
+              <label for="comment_author" class="text-gray-700 font-medium uppercase text-xs mb-2">Name</label>
+              <input
+                type="text"
+                name="comment[author]"
+                id="comment_author"
+                class="w-full bg-gray-100 text-gray-700 border border-gray-300 rounded-lg py-2 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                required>
+            </div>
+            <div class="px-3 md:w-1/2">
+              <label for="comment_email" class="text-gray-700 font-medium uppercase text-xs mb-2">Email</label>
+              <input
+                type="email"
+                name="comment[email]"
+                id="comment_email"
+                class="w-full bg-gray-100 text-gray-700 border border-gray-300 rounded-lg py-2 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                required>
+            </div>
+          </div>
+          <div class="px-1 md:flex mb-3">
+            <div class="md:w-full px-3">
+              <label for="comment_content" class="text-gray-700 font-medium uppercase text-xs mb-2">Comment</label>
+              <textarea
+                class="w-full bg-gray-100 text-gray-700 border border-gray-300 rounded-lg py-2 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500 resize-none"
+                name="comment_body"
+                id="comment_content"
+                required></textarea>
+            </div>
+          </div>
+          <div class="px-1 md:flex mb-3">
+            <div class="md:w-full px-3">
+              <input
+                type="submit"
+                class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                value="Post comment">
+            </div>
+          </div>
+        </div>
+      {% endform %}
+    </div>
+  {% endif %}
 
-{% schema %}
-  {
-    "name": "Template Article",
-    "settings": [
-      {
-        "type": "checkbox",
-        "id": "show_author",
-        "default": true,
-        "label": "Display Author Name"
-      }, {
-        "type": "checkbox",
-        "id": "show_date",
-        "default": true,
-        "label": "Display Date"
-      }
-    ],
-    "blocks": [
-      {
-        "type": "article_title",
-        "name": " Title",
-        "limit": 1
-      },
-      {
-        "type": "article_author",
-        "name": "Author Name",
-        "limit": 1
-      },
-      {
-        "type": "article_date",
-        "name": "Article Publish Date",
-        "limit": 1
-      },
-      {
-        "type": "article_image",
-        "name": "Thumbnail",
-        "limit": 1
-      }, {
-        "type": "article_content",
-        "name": " Content",
-        "limit": 1
-      }
-    ]
-  }
-{% endschema %}
+  {% schema %}
+    {
+      "name": "Template Article",
+      "settings": [
+        {
+          "type": "checkbox",
+          "id": "show_author",
+          "default": true,
+          "label": "Display Author Name"
+        }, {
+          "type": "checkbox",
+          "id": "show_date",
+          "default": true,
+          "label": "Display Date"
+        }
+      ],
+      "blocks": [
+        {
+          "type": "article_title",
+          "name": " Title",
+          "limit": 1
+        },
+        {
+          "type": "article_author",
+          "name": "Author Name",
+          "limit": 1
+        },
+        {
+          "type": "article_date",
+          "name": "Article Publish Date",
+          "limit": 1
+        },
+        {
+          "type": "article_image",
+          "name": "Thumbnail",
+          "limit": 1
+        }, {
+          "type": "article_content",
+          "name": " Content",
+          "limit": 1
+        }
+      ]
+    }
+  {% endschema %}
